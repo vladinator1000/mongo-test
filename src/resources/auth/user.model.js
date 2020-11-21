@@ -4,7 +4,7 @@ const { Schema, model } = mongoose
 
 const userSchema = new Schema({
   email: String,
-  isEmailVerified: Boolean,
+  isEmailVerified: { type: Boolean, default: false },
   password: String,
   token: String,
 })

@@ -87,6 +87,7 @@ authRouter.get('/verifyEmail/:token', async (req, res) => {
     if (verificationResult) {
       const { email } = verificationResult.user
       const user = await UserModel.findOne({ email, isEmailVerified: false })
+      console.log({ email, user })
 
       if (!user) {
         return res.status(400).json({ error: { code: 'USER_NOT_FOUND' } })
