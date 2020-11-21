@@ -1,4 +1,3 @@
-import request from 'supertest'
 import testHelper from '../../testHelper'
 
 describe('timestamp', () => {

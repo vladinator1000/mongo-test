@@ -8,7 +8,18 @@ export const authRouter = Router()
 
 export const authorization = async (req, res, next) => {
   try {
-    req.context = await verifyToken(req.headers.authorization)
+    const authResult = await verifyToken(req.headers.authorization)
+    const user = await UserModel.findOne({
+      email: authResult.user.email,
+      isEmailVerified: true,
+    })
+
+    if (!user) {
+      return res.status(401).send()
+    }
+
+    delete user.password
+    req.context = { user }
     next()
   } catch (error) {
     res.status(401).json({ error: error.toString() })
@@ -18,8 +29,9 @@ export const authorization = async (req, res, next) => {
 authRouter.post('/login', async (req, res) => {
   const { email, password } = req.body
 
+  console.log(email)
   try {
-    const user = await UserModel.findOne({ email })
+    const user = await UserModel.findOne({ email, isEmailVerified: true })
 
     if (!user) {
       return res.status(400).json({ error: { code: 'EMAIL_NOT_FOUND' } })
@@ -49,7 +61,7 @@ authRouter.post('/register', async (req, res) => {
       return res.status(400).json({ error: { code: 'EMAIL_ALREADY_EXISTS' } })
     }
 
-    const token = await makeToken(email)
+    const token = await makeToken({ email })
 
     // Send email
     console.log('Registration successful ', token)
@@ -84,7 +96,7 @@ authRouter.get('/verifyEmail/:token', async (req, res) => {
 
       if (doTokensMatch) {
         const newToken = await makeToken(user)
-        await user.update({ isEmailVerified: true, token: newToken })
+        await user.updateOne({ isEmailVerified: true, token: newToken })
 
         return res.json({ token: newToken })
       } else {
